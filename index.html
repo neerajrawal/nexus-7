@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NEXUS-7 AI Core</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class', theme: { extend: {
+    colors: { cyber: { bg:'#0a0b10', panel:'#12141c', border:'#1e2230', accent:'#00f0ff', purple:'#b026ff', text:'#e2e8f0', muted:'#8b9bb4' } },
+    fontFamily: { sans: ['Inter','system-ui','-apple-system','sans-serif'], mono: ['"Courier New"','Courier','monospace'] }
+  }}}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  :root { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #0a0b10; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0a0b10; }
+  ::-webkit-scrollbar-thumb { background: #1e2230; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #00f0ff; }
+  .glow-effect { box-shadow: 0 0 20px rgba(0,240,255,0.15); }
+  .typing-dots { display: inline-flex; align-items: center; gap: 4px; height: 1em; }
+  .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: #00f0ff; opacity: .35; animation: nexus-bounce 1s infinite ease-in-out; }
+  .typing-dots span:nth-child(2) { animation-delay: .15s; }
+  .typing-dots span:nth-child(3) { animation-delay: .3s; }
+  @keyframes nexus-bounce { 0%,80%,100% { transform: scale(0.6); opacity: .3; } 40% { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body class="bg-cyber-bg text-cyber-text font-sans h-screen flex overflow-hidden select-none">
+
+  <aside id="sidebar" class="w-72 bg-cyber-panel border-r border-cyber-border flex flex-col transition-all duration-300 z-20 flex-shrink-0">
+    <div class="h-16 border-b border-cyber-border flex items-center justify-between px-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyber-accent to-cyber-purple flex items-center justify-center font-mono font-bold text-cyber-bg glow-effect">N7</div>
+        <span class="font-bold tracking-wider text-white text-sm">NEXUS-7 <span class="text-cyber-accent text-xs">CORE</span></span>
+      </div>
+      <button id="toggle-sidebar-btn" aria-label="Collapse sidebar" title="Collapse sidebar" class="p-2 text-cyber-muted hover:text-white rounded-lg hover:bg-cyber-border transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+      </button>
+    </div>
+    <div class="p-4">
+      <button id="new-chat-btn" class="w-full py-2.5 px-4 bg-gradient-to-r from-cyber-accent/20 to-cyber-purple/20 hover:from-cyber-accent/30 hover:to-cyber-purple/30 border border-cyber-accent/40 rounded-xl text-cyber-accent font-medium text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-cyber-accent/5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>New Session</span>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto px-3 space-y-1.5" id="session-list"></div>
+    <div class="p-4 border-t border-cyber-border flex items-center justify-between text-xs text-cyber-muted">
+      <span class="font-mono" id="system-status">SYSTEM: NO KEY</span>
+      <span id="status-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col h-full bg-cyber-bg relative overflow-hidden">
+    <header class="h-16 border-b border-cyber-border flex items-center justify-between px-6 bg-cyber-panel/50 backdrop-blur-md z-10">
+      <div class="flex items-center space-x-4">
+        <button id="mobile-toggle-btn" aria-label="Toggle menu" class="md:hidden text-cyber-muted hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div>
+          <h1 id="current-session-title" class="font-semibold text-white tracking-wide text-sm">Autonomous Core Session</h1>
+          <p class="text-xs text-cyber-muted font-mono">Engine: Claude Sonnet 5 (your API key)</p>
+        </div>
+      </div>
+      <button id="settings-btn" class="p-2.5 rounded-xl bg-cyber-border/50 hover:bg-cyber-border text-cyber-muted hover:text-cyber-accent transition-colors flex items-center space-x-2" title="Configure API key">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="text-xs font-mono hidden sm:inline">Configure Key</span>
+      </button>
+    </header>
+
+    <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 max-w-4xl w-full mx-auto">
+      <div id="message-stream" class="space-y-6"></div>
+    </div>
+
+    <div class="p-4 md:p-6 bg-cyber-bg border-t border-cyber-border">
+      <div class="max-w-4xl mx-auto">
+        <div class="relative bg-cyber-panel border border-cyber-border rounded-2xl p-2 focus-within:border-cyber-accent transition-all shadow-xl">
+          <textarea id="user-input" rows="1" placeholder="Transmit prompt to NEXUS-7..." class="w-full bg-transparent text-white placeholder-cyber-muted text-sm px-3 py-2.5 focus:outline-none resize-none max-h-36"></textarea>
+          <div class="flex items-center justify-between px-2 pt-2 border-t border-cyber-border/40 mt-1">
+            <div class="flex items-center space-x-2 text-xs text-cyber-muted font-mono">
+              <span class="flex items-center space-x-1"><span class="w-1.5 h-1.5 rounded-full bg-cyber-accent"></span><span>claude-sonnet-5</span></span>
+            </div>
+            <button id="send-btn" disabled aria-label="Send message" class="px-4 py-2 bg-gradient-to-r from-cyber-accent to-cyber-purple hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:opacity-40 text-cyber-bg font-semibold rounded-xl text-xs flex items-center space-x-2 transition-all shadow-md shadow-cyber-accent/20">
+              <span id="send-btn-label">TRANSMIT</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="text-center mt-2 space-y-0.5">
+          <div class="text-[10px] text-cyber-muted">Press <span class="text-cyber-text">Enter</span> to send · <span class="text-cyber-text">Shift+Enter</span> for a new line</div>
+          <span class="text-[10px] text-cyber-muted font-mono block">NEXUS-7 can produce synthetic inaccuracies. Verify mission-critical telemetry.</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="settings-modal" class="fixed inset-0 bg-cyber-bg/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-cyber-panel border border-cyber-border rounded-2xl w-full max-w-md p-6 shadow-2xl relative mx-4">
+      <div class="flex items-center justify-between pb-4 border-b border-cyber-border mb-4">
+        <h3 class="text-lg font-bold text-white">Neural Configuration</h3>
+        <button id="close-modal-btn" aria-label="Close" class="text-cyber-muted hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <label class="block text-xs font-mono uppercase tracking-wider text-cyber-muted mb-2">Anthropic API Key</label>
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." class="w-full bg-cyber-bg border border-cyber-border rounded-xl px-4 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-cyber-accent transition-colors">
+      <p class="text-[11px] text-cyber-muted mt-1.5">Stored only in this browser's local storage. Sent to this local server, which forwards it to Anthropic over HTTPS — it never goes anywhere else.</p>
+      <div class="mt-6 flex justify-end space-x-3">
+        <button id="cancel-settings-btn" class="px-4 py-2.5 bg-cyber-border text-cyber-text font-medium rounded-xl text-xs hover:bg-cyber-border/80 transition-all">Cancel</button>
+        <button id="save-settings-btn" class="px-5 py-2.5 bg-cyber-accent text-cyber-bg font-semibold rounded-xl text-xs hover:bg-cyber-accent/90 transition-all">Save</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const PERSONA = "You are NEXUS-7, an elite futuristic AI core with advanced technical and creative capabilities. Provide precise, clean, and beautifully structured responses. Format with Markdown where useful. If the user's message contains typos or misspelled words, silently interpret their intended meaning from context and respond normally — never point out, correct, mention, or ask about the misspelling.";
+  const WELCOME_TEXT = "👋 Welcome to NEXUS-7. I'm your AI core — ask me to explain something, help you write or debug code, brainstorm ideas, or dig into a tricky problem. What are you working on today?";
+  const QUICK_PROMPTS = ['Analyze Quantum Encryption', 'Draft Cyberpunk Scenario', 'Optimize Async JavaScript'];
+
+  function newSession(title) {
+    return { id: Date.now().toString() + Math.random().toString(36).slice(2, 6), title, messages: [{ role: 'model', text: WELCOME_TEXT, welcome: true }] };
+  }
+
+  let sessions = [];
+  try { sessions = JSON.parse(localStorage.getItem('nexus_sessions')) || []; } catch (e) { sessions = []; }
+  if (!sessions.length) sessions = [newSession('Autonomous Core Session')];
+  let currentSessionId = sessions[0].id;
+
+  const sessionListEl = document.getElementById('session-list');
+  const currentSessionTitleEl = document.getElementById('current-session-title');
+  const messageStreamEl = document.getElementById('message-stream');
+  const userInputEl = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+  const sendBtnLabel = document.getElementById('send-btn-label');
+  const sidebar = document.getElementById('sidebar');
+  const settingsModal = document.getElementById('settings-modal');
+  const apiKeyInput = document.getElementById('api-key-input');
+  const systemStatusEl = document.getElementById('system-status');
+  const statusDotEl = document.getElementById('status-dot');
+
+  let busy = false;
+  let abortCtl = null;
+
+  function getApiKey() { return localStorage.getItem('nexus_anthropic_api_key') || ''; }
+  function refreshStatus() {
+    const has = !!getApiKey();
+    systemStatusEl.textContent = has ? 'SYSTEM: ONLINE' : 'SYSTEM: NO KEY';
+    statusDotEl.className = `w-2 h-2 rounded-full ${has ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`;
+  }
+
+  apiKeyInput.value = getApiKey();
+  refreshStatus();
+  renderSessions();
+  renderCurrentChat();
+  updateSendState();
+  userInputEl.focus();
+
+  document.getElementById('toggle-sidebar-btn').addEventListener('click', () => sidebar.classList.toggle('-ml-72'));
+  document.getElementById('mobile-toggle-btn').addEventListener('click', () => sidebar.classList.toggle('-ml-72'));
+
+  document.getElementById('settings-btn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
+  document.getElementById('close-modal-btn').addEventListener('click', () => settingsModal.classList.add('hidden'));
+  document.getElementById('cancel-settings-btn').addEventListener('click', () => settingsModal.classList.add('hidden'));
+  document.getElementById('save-settings-btn').addEventListener('click', () => {
+    localStorage.setItem('nexus_anthropic_api_key', apiKeyInput.value.trim());
+    refreshStatus();
+    settingsModal.classList.add('hidden');
+  });
+
+  document.getElementById('new-chat-btn').addEventListener('click', () => {
+    const s = newSession('New Neural Session');
+    sessions.unshift(s);
+    currentSessionId = s.id;
+    saveAndRender();
+    userInputEl.focus();
+  });
+
+  function updateSendState() { sendBtn.disabled = !busy && !userInputEl.value.trim(); }
+
+  userInputEl.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; updateSendState(); });
+  userInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
+  sendBtn.addEventListener('click', () => { if (busy) { abortCtl?.abort(); } else { handleSendMessage(); } });
+
+  function persist() { try { localStorage.setItem('nexus_sessions', JSON.stringify(sessions)); } catch (e) {} }
+  function saveAndRender() { persist(); renderSessions(); renderCurrentChat(); }
+
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function renderSessions() {
+    sessionListEl.innerHTML = '';
+    sessions.forEach(s => {
+      const isActive = s.id === currentSessionId;
+      const div = document.createElement('div');
+      div.className = `group flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors text-sm ${isActive ? 'bg-cyber-border text-white font-medium' : 'text-cyber-muted hover:bg-cyber-border/50 hover:text-white'}`;
+      div.innerHTML = `
+        <div class="flex items-center space-x-2.5 truncate">
+          <svg class="w-4 h-4 text-cyber-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          <span class="truncate">${escapeHtml(s.title)}</span>
+        </div>
+        <button class="opacity-0 group-hover:opacity-100 text-cyber-muted hover:text-red-400 p-1 transition-opacity delete-btn" aria-label="Delete session" data-id="${s.id}">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 2 0 00-2-2h-4a1 2 0 00-2 2v3M4 7h16"/></svg>
+        </button>`;
+      div.addEventListener('click', (e) => {
+        if (e.target.closest('.delete-btn')) { e.stopPropagation(); deleteSession(s.id); return; }
+        currentSessionId = s.id; renderSessions(); renderCurrentChat();
+      });
+      sessionListEl.appendChild(div);
+    });
+  }
+
+  function deleteSession(id) {
+    if (!confirm('Delete this session? This cannot be undone.')) return;
+    sessions = sessions.filter(s => s.id !== id);
+    if (!sessions.length) sessions.push(newSession('Autonomous Core Session'));
+    if (currentSessionId === id) currentSessionId = sessions[0].id;
+    saveAndRender();
+  }
+
+  function renderCurrentChat() {
+    const cur = sessions.find(s => s.id === currentSessionId);
+    if (!cur) return;
+    currentSessionTitleEl.textContent = cur.title;
+    messageStreamEl.innerHTML = '';
+    cur.messages.forEach(msg => {
+      const wrap = document.createElement('div');
+      wrap.className = `flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full`;
+      const bubble = document.createElement('div');
+      if (msg.role === 'user') {
+        bubble.className = 'max-w-xl bg-cyber-accent/10 border border-cyber-accent/30 rounded-2xl p-4 text-white text-sm leading-relaxed whitespace-pre-wrap';
+        bubble.textContent = msg.text;
+      } else {
+        bubble.className = 'max-w-2xl bg-cyber-panel border border-cyber-border rounded-2xl p-5 text-cyber-text text-sm leading-relaxed shadow-lg';
+        if (msg.text === '__typing__') {
+          bubble.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+        } else {
+          try { bubble.innerHTML = (typeof marked !== 'undefined') ? marked.parse(msg.text || '') : msg.text; }
+          catch (e) { bubble.textContent = msg.text; }
+        }
+      }
+      wrap.appendChild(bubble);
+      messageStreamEl.appendChild(wrap);
+      if (msg.welcome && cur.messages.length === 1) {
+        const chips = document.createElement('div');
+        chips.className = 'flex flex-wrap gap-2';
+        QUICK_PROMPTS.forEach(p => {
+          const b = document.createElement('button');
+          b.className = 'quick-prompt px-3.5 py-1.5 bg-cyber-panel hover:bg-cyber-border border border-cyber-border rounded-lg text-xs text-cyber-text transition-colors';
+          b.textContent = p;
+          b.addEventListener('click', () => { userInputEl.value = p; handleSendMessage(); });
+          chips.appendChild(b);
+        });
+        messageStreamEl.appendChild(chips);
+      }
+    });
+    const cc = document.getElementById('chat-container');
+    cc.scrollTop = cc.scrollHeight;
+  }
+
+  async function handleSendMessage() {
+    if (busy) return;
+    const text = userInputEl.value.trim();
+    if (!text) return;
+    const cur = sessions.find(s => s.id === currentSessionId);
+    if (!cur.messages.some(m => m.role === 'user')) cur.title = text.length > 25 ? text.slice(0, 25) + '...' : text;
+
+    cur.messages.push({ role: 'user', text });
+    userInputEl.value = '';
+    userInputEl.style.height = 'auto';
+    updateSendState();
+    saveAndRender();
+
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      cur.messages.push({ role: 'model', text: '_No API key configured. Click **Configure Key** above to add your Anthropic API key._' });
+      saveAndRender();
+      return;
+    }
+
+    cur.messages.push({ role: 'model', text: '__typing__' });
+    const replyIdx = cur.messages.length - 1;
+    renderCurrentChat();
+
+    busy = true;
+    sendBtnLabel.textContent = 'STOP';
+    abortCtl = new AbortController();
+
+    const apiMessages = cur.messages.slice(0, -1)
+      .filter(m => !m.welcome)
+      .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
+
+    try {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: abortCtl.signal,
+        body: JSON.stringify({ apiKey, system: PERSONA, messages: apiMessages }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        let errText = 'Transmission error.';
+        try { const j = await resp.json(); errText = (j.error && j.error.message) || errText; } catch (e) {}
+        cur.messages[replyIdx].text = errText;
+        saveAndRender();
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      let full = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const jsonStr = line.slice(5).trim();
+          if (!jsonStr) continue;
+          let evt;
+          try { evt = JSON.parse(jsonStr); } catch (e) { continue; }
+          if (evt.type === 'content_block_delta' && evt.delta && evt.delta.type === 'text_delta') {
+            full += evt.delta.text;
+            cur.messages[replyIdx].text = full;
+            renderCurrentChat();
+          } else if (evt.type === 'error') {
+            throw new Error((evt.error && evt.error.message) || 'Upstream error');
+          }
+        }
+      }
+      cur.messages[replyIdx].text = full || '_(empty response)_';
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        if (!cur.messages[replyIdx].text || cur.messages[replyIdx].text === '__typing__') cur.messages.splice(replyIdx, 1);
+      } else {
+        cur.messages[replyIdx].text = e.message || 'Transmission error.';
+      }
+    } finally {
+      busy = false;
+      sendBtnLabel.textContent = 'TRANSMIT';
+      updateSendState();
+      saveAndRender();
+    }
+  }
+</script>
+</body>
+</html>
