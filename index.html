@@ -1,418 +1,658 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS-7 AI Clean Interface</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        cyber: {
-                            bg: '#0a0b10',
-                            panel: '#12141c',
-                            border: '#1e2230',
-                            accent: '#00f0ff',
-                            purple: '#b026ff',
-                            text: '#e2e8f0',
-                            muted: '#8b9bb4'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-                        mono: ['"Courier New"', 'Courier', 'monospace']
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Marked.js for Markdown parsing -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Tailwind Custom Styles & Scrollbar -->
-    <style>
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0a0b10;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1e2230;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #00f0ff;
-        }
-        .glow-effect {
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NEXUS-7</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class', theme: { extend: {
+    colors: { nexus: { bg:'#0f1115', panel:'#171a21', border:'#262b35', accent:'#6366f1', accent2:'#8b5cf6', text:'#e5e7eb', muted:'#9aa1ae' } },
+    fontFamily: { sans: ['Inter','system-ui','-apple-system','sans-serif'] }
+  }}}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  :root { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #0f1115; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0f1115; }
+  ::-webkit-scrollbar-thumb { background: #262b35; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+  .typing-dots { display: inline-flex; align-items: center; gap: 4px; height: 1em; }
+  .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: #6366f1; opacity: .35; animation: nexus-bounce 1s infinite ease-in-out; }
+  .typing-dots span:nth-child(2) { animation-delay: .15s; }
+  .typing-dots span:nth-child(3) { animation-delay: .3s; }
+  @keyframes nexus-bounce { 0%,80%,100% { transform: scale(0.6); opacity: .3; } 40% { transform: scale(1); opacity: 1; } }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; background: #1f2330; border: 1px solid #2d3340; border-radius: 999px; padding: 4px 10px; color: #c7cad1; }
+</style>
 </head>
-<body class="bg-cyber-bg text-cyber-text font-sans h-screen flex overflow-hidden select-none">
+<body class="bg-nexus-bg text-nexus-text font-sans h-screen flex overflow-hidden select-none">
 
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-72 bg-cyber-panel border-r border-cyber-border flex flex-col transition-all duration-300 z-20 flex-shrink-0">
-        <!-- Sidebar Header -->
-        <div class="h-16 border-b border-cyber-border flex items-center justify-between px-4">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyber-accent to-cyber-purple flex items-center justify-center font-mono font-bold text-cyber-bg glow-effect">
-                    N7
-                </div>
-                <span class="font-bold tracking-wider text-white text-sm">NEXUS-7 <span class="text-cyber-accent text-xs">CORE</span></span>
-            </div>
-            <button id="toggle-sidebar-btn" class="p-2 text-cyber-muted hover:text-white rounded-lg hover:bg-cyber-border transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
-            </button>
-        </div>
+  <!-- Auth modal (optional sign-in — closable, doesn't block the app) -->
+  <div id="auth-modal" class="fixed inset-0 bg-nexus-bg/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-6">
+    <div class="bg-nexus-panel border border-nexus-border rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
+      <button id="close-auth-btn" aria-label="Close" class="absolute top-4 right-4 text-nexus-muted hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+      <div class="flex flex-col items-center text-center mb-6">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-nexus-accent to-nexus-accent2 flex items-center justify-center font-bold text-white text-lg mb-3">N7</div>
+        <h1 class="text-xl font-semibold text-white">Sign in to NEXUS-7</h1>
+        <p class="text-sm text-nexus-muted mt-1">Your chats will sync across your devices. You can keep using NEXUS-7 as a guest without this.</p>
+      </div>
+      <button id="google-signin-btn" class="w-full py-2.5 px-4 bg-white hover:bg-gray-100 text-gray-900 font-medium rounded-xl text-sm flex items-center justify-center space-x-2 transition-all mb-4">
+        <svg class="w-4 h-4" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.3 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.6 35.1 26.9 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.6 5.6C40.9 36.6 44 30.9 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+        <span>Continue with Google</span>
+      </button>
+      <div class="flex items-center gap-3 text-nexus-muted text-xs mb-4"><div class="flex-1 h-px bg-nexus-border"></div>or<div class="flex-1 h-px bg-nexus-border"></div></div>
+      <form id="auth-form" class="space-y-3">
+        <input id="auth-email" type="email" required placeholder="Email" autocomplete="email" class="w-full bg-nexus-bg border border-nexus-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-nexus-accent transition-colors">
+        <input id="auth-password" type="password" required minlength="6" placeholder="Password" autocomplete="current-password" class="w-full bg-nexus-bg border border-nexus-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-nexus-accent transition-colors">
+        <button id="auth-submit-btn" type="submit" class="w-full py-2.5 px-4 bg-nexus-accent hover:opacity-90 text-white font-medium rounded-xl text-sm transition-all">Sign in</button>
+      </form>
+      <p id="auth-error" class="text-xs text-rose-400 mt-3 min-h-[1em]"></p>
+      <p class="text-xs text-nexus-muted text-center mt-2">
+        <span id="auth-toggle-prompt">Don't have an account?</span>
+        <button id="auth-toggle-btn" type="button" class="text-nexus-accent hover:underline">Create one</button>
+      </p>
+    </div>
+  </div>
 
-        <!-- New Chat Button -->
-        <div class="p-4">
-            <button id="new-chat-btn" class="w-full py-2.5 px-4 bg-gradient-to-r from-cyber-accent/20 to-cyber-purple/20 hover:from-cyber-accent/30 hover:to-cyber-purple/30 border border-cyber-accent/40 rounded-xl text-cyber-accent font-medium text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-cyber-accent/5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>New Session</span>
-            </button>
+  <!-- Main app (always usable — sign-in is optional) -->
+  <div id="app-root" class="flex w-full h-full">
+    <aside id="sidebar" class="w-72 bg-nexus-panel border-r border-nexus-border flex flex-col transition-all duration-300 z-20 flex-shrink-0">
+      <div class="h-16 border-b border-nexus-border flex items-center justify-between px-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-nexus-accent to-nexus-accent2 flex items-center justify-center font-bold text-white text-sm">N7</div>
+          <span class="font-semibold text-white text-sm">NEXUS-7</span>
         </div>
-
-        <!-- Session List -->
-        <div class="flex-1 overflow-y-auto px-3 space-y-1.5" id="session-list">
-            <!-- Sessions injected via JS -->
-        </div>
-
-        <!-- Sidebar Footer -->
-        <div class="p-4 border-t border-cyber-border flex items-center justify-between text-xs text-cyber-muted">
-            <span class="font-mono">SYSTEM: ONLINE</span>
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        </div>
+        <button id="toggle-sidebar-btn" aria-label="Collapse sidebar" title="Collapse sidebar" class="p-2 text-nexus-muted hover:text-white rounded-lg hover:bg-nexus-border transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+        </button>
+      </div>
+      <div class="p-4">
+        <button id="new-chat-btn" class="w-full py-2.5 px-4 bg-nexus-accent/15 hover:bg-nexus-accent/25 border border-nexus-accent/30 rounded-xl text-nexus-accent font-medium text-sm flex items-center justify-center space-x-2 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>New chat</span>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-3 space-y-1.5" id="session-list"></div>
+      <div class="p-4 border-t border-nexus-border" id="account-section"></div>
     </aside>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col h-full bg-cyber-bg relative overflow-hidden">
-        
-        <!-- Top Header -->
-        <header class="h-16 border-b border-cyber-border flex items-center justify-between px-6 bg-cyber-panel/50 backdrop-blur-md z-10">
-            <div class="flex items-center space-x-4">
-                <button id="mobile-toggle-btn" class="md:hidden text-cyber-muted hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
-                <div>
-                    <h1 id="current-session-title" class="font-semibold text-white tracking-wide text-sm">Autonomous Core Session</h1>
-                    <p class="text-xs text-cyber-muted font-mono">Model: gemini-3.8-flash</p>
-                </div>
-            </div>
-
-            <div class="flex items-center space-x-3">
-                <button id="settings-btn" class="p-2.5 rounded-xl bg-cyber-border/50 hover:bg-cyber-border text-cyber-muted hover:text-cyber-accent transition-colors flex items-center space-x-2" title="Settings">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    <span class="text-xs font-mono hidden sm:inline">Configure Key</span>
-                </button>
-            </div>
-        </header>
-
-        <!-- Chat Container -->
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 max-w-4xl w-full mx-auto">
-            <!-- Welcome Banner inside chat when empty -->
-            <div id="welcome-banner" class="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyber-accent/20 to-cyber-purple/20 border border-cyber-accent/30 flex items-center justify-center glow-effect mb-2">
-                    <svg class="w-8 h-8 text-cyber-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                </div>
-                <h2 class="text-2xl font-bold text-white tracking-wide">NEXUS-7 AI SYSTEM</h2>
-                <p class="text-cyber-muted max-w-md text-sm leading-relaxed">Initialized with Gemini 3.8 Flash engine. Ready for multi-modal reasoning, coding queries, and synthetic analysis.</p>
-                <div class="flex flex-wrap gap-2 justify-center pt-4">
-                    <button class="quick-prompt px-3.5 py-1.5 bg-cyber-panel hover:bg-cyber-border border border-cyber-border rounded-lg text-xs text-cyber-text transition-colors">Analyze Quantum Encryption</button>
-                    <button class="quick-prompt px-3.5 py-1.5 bg-cyber-panel hover:bg-cyber-border border border-cyber-border rounded-lg text-xs text-cyber-text transition-colors">Draft Cyberpunk Scenario</button>
-                    <button class="quick-prompt px-3.5 py-1.5 bg-cyber-panel hover:bg-cyber-border border border-cyber-border rounded-lg text-xs text-cyber-text transition-colors">Optimize Async JavaScript</button>
-                </div>
-            </div>
-            <!-- Dynamic Message Stream -->
-            <div id="message-stream" class="space-y-6 hidden"></div>
+    <main class="flex-1 flex flex-col h-full bg-nexus-bg relative overflow-hidden">
+      <header class="h-16 border-b border-nexus-border flex items-center justify-between px-6 bg-nexus-panel/50 backdrop-blur-md z-10">
+        <div class="flex items-center space-x-4">
+          <button id="mobile-toggle-btn" aria-label="Toggle menu" class="md:hidden text-nexus-muted hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div>
+            <h1 id="current-session-title" class="font-semibold text-white text-sm">New chat</h1>
+            <p class="text-xs text-nexus-muted">Powered by Gemini</p>
+          </div>
         </div>
+        <button id="settings-btn" class="p-2.5 rounded-xl bg-nexus-border/50 hover:bg-nexus-border text-nexus-muted hover:text-nexus-accent transition-colors flex items-center space-x-2" title="Settings">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span class="text-xs hidden sm:inline">Settings</span>
+        </button>
+      </header>
 
-        <!-- Input Bar Section -->
-        <div class="p-4 md:p-6 bg-cyber-bg border-t border-cyber-border">
-            <div class="max-w-4xl mx-auto">
-                <div class="relative bg-cyber-panel border border-cyber-border rounded-2xl p-2 focus-within:border-cyber-accent transition-all shadow-xl">
-                    <textarea id="user-input" rows="1" placeholder="Transmit prompt to NEXUS-7..." class="w-full bg-transparent text-white placeholder-cyber-muted text-sm px-3 py-2.5 focus:outline-none resize-none max-h-36"></textarea>
-                    
-                    <div class="flex items-center justify-between px-2 pt-2 border-t border-cyber-border/40 mt-1">
-                        <div class="flex items-center space-x-2 text-xs text-cyber-muted font-mono">
-                            <span class="flex items-center space-x-1">
-                                <span class="w-1.5 h-1.5 rounded-full bg-cyber-accent"></span>
-                                <span>gemini-3.8-flash</span>
-                            </span>
-                        </div>
-                        <button id="send-btn" class="px-4 py-2 bg-gradient-to-r from-cyber-accent to-cyber-purple hover:opacity-90 text-cyber-bg font-semibold rounded-xl text-xs flex items-center space-x-2 transition-all shadow-md shadow-cyber-accent/20">
-                            <span>TRANSMIT</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="text-center mt-2">
-                    <span class="text-[10px] text-cyber-muted font-mono">NEXUS-7 can produce synthetic inaccuracies. Verify mission-critical telemetry.</span>
-                </div>
+      <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 max-w-4xl w-full mx-auto">
+        <div id="message-stream" class="space-y-6"></div>
+      </div>
+
+      <div class="p-4 md:p-6 bg-nexus-bg border-t border-nexus-border">
+        <div class="max-w-4xl mx-auto">
+          <div id="pending-attachments" class="flex flex-wrap gap-2 mb-2"></div>
+          <p id="attach-error" class="text-xs text-rose-400 mb-1 min-h-[1em]"></p>
+          <div class="relative bg-nexus-panel border border-nexus-border rounded-2xl p-2 focus-within:border-nexus-accent transition-all">
+            <textarea id="user-input" rows="1" placeholder="Message NEXUS-7..." class="w-full bg-transparent text-white placeholder-nexus-muted text-sm px-3 py-2.5 focus:outline-none resize-none max-h-36"></textarea>
+            <div class="flex items-center justify-between px-2 pt-2 border-t border-nexus-border/40 mt-1">
+              <button id="attach-btn" aria-label="Attach a file" title="Attach an image or document" class="p-1.5 text-nexus-muted hover:text-nexus-accent rounded-lg hover:bg-nexus-border/50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+              </button>
+              <input id="file-input" type="file" multiple accept="image/*,application/pdf,text/plain,text/markdown,text/csv,application/json,.md,.csv,.txt,.json" class="hidden">
+              <button id="send-btn" disabled aria-label="Send message" class="px-4 py-2 bg-nexus-accent hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:opacity-40 text-white font-medium rounded-xl text-xs flex items-center space-x-2 transition-all">
+                <span id="send-btn-label">Send</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </button>
             </div>
+          </div>
+          <div class="text-center mt-2 space-y-0.5">
+            <div class="text-[10px] text-nexus-muted">Press <span class="text-nexus-text">Enter</span> to send · <span class="text-nexus-text">Shift+Enter</span> for a new line</div>
+            <span class="text-[10px] text-nexus-muted block">NEXUS-7 can make mistakes. Please double-check important information.</span>
+          </div>
         </div>
+      </div>
     </main>
+  </div>
 
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="fixed inset-0 bg-cyber-bg/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-cyber-panel border border-cyber-border rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-            <div class="flex items-center justify-between pb-4 border-b border-cyber-border mb-4">
-                <h3 class="text-lg font-bold text-white flex items-center space-x-2">
-                    <svg class="w-5 h-5 text-cyber-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    <span>Neural Configuration</span>
-                </h3>
-                <button id="close-modal-btn" class="text-cyber-muted hover:text-white">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-wider text-cyber-muted mb-2">Gemini API Key</label>
-                    <input type="password" id="api-key-input" placeholder="Enter custom API key..." class="w-full bg-cyber-bg border border-cyber-border rounded-xl px-4 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-cyber-accent transition-colors">
-                    <p class="text-[11px] text-cyber-muted mt-1.5">Stored securely in your browser's local storage.</p>
-                </div>
-            </div>
-
-            <div class="mt-6 flex justify-end space-x-3">
-                <button id="cancel-settings-btn" class="px-4 py-2.5 bg-cyber-border text-cyber-text font-medium rounded-xl text-xs hover:bg-cyber-border/80 transition-all">Cancel</button>
-                <button id="save-settings-btn" class="px-5 py-2.5 bg-cyber-accent text-cyber-bg font-semibold rounded-xl text-xs hover:bg-cyber-accent/90 transition-all">Save Credentials</button>
-            </div>
-        </div>
+  <div id="settings-modal" class="fixed inset-0 bg-nexus-bg/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-nexus-panel border border-nexus-border rounded-2xl w-full max-w-md p-6 shadow-2xl relative mx-4">
+      <div class="flex items-center justify-between pb-4 border-b border-nexus-border mb-4">
+        <h3 class="text-lg font-semibold text-white">Settings</h3>
+        <button id="close-modal-btn" aria-label="Close" class="text-nexus-muted hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <label class="block text-xs uppercase tracking-wide text-nexus-muted mb-2">Gemini API key</label>
+      <input type="password" id="api-key-input" placeholder="AIza..." class="w-full bg-nexus-bg border border-nexus-border rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-nexus-accent transition-colors">
+      <p class="text-[11px] text-nexus-muted mt-1.5">Stored only in this browser. Sent to our server, which forwards it to Google over HTTPS — it's never stored anywhere else. If this app already has a shared key configured, you can leave this blank.</p>
+      <div class="mt-6 flex justify-end space-x-3">
+        <button id="cancel-settings-btn" class="px-4 py-2.5 bg-nexus-border text-nexus-text font-medium rounded-xl text-xs hover:bg-nexus-border/80 transition-all">Cancel</button>
+        <button id="save-settings-btn" class="px-5 py-2.5 bg-nexus-accent text-white font-medium rounded-xl text-xs hover:opacity-90 transition-all">Save</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Application Logic -->
-    <script>
-        let sessions = JSON.parse(localStorage.getItem('nexus_sessions')) || [
-            { id: '1', title: 'Autonomous Core Session', messages: [] }
-        ];
-        let currentSessionId = sessions[0].id;
-        let apiKey = localStorage.getItem('nexus_gemini_api_key') || '';
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, setDoc, deleteDoc, getDocs, query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-        const sessionListEl = document.getElementById('session-list');
-        const currentSessionTitleEl = document.getElementById('current-session-title');
-        const messageStreamEl = document.getElementById('message-stream');
-        const welcomeBannerEl = document.getElementById('welcome-banner');
-        const userInputEl = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const settingsModal = document.getElementById('settings-modal');
-        const settingsBtn = document.getElementById('settings-btn');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const cancelSettingsBtn = document.getElementById('cancel-settings-btn');
-        const saveSettingsBtn = document.getElementById('save-settings-btn');
-        const apiKeyInput = document.getElementById('api-key-input');
-        const sidebar = document.getElementById('sidebar');
-        const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
-        const mobileToggleBtn = document.getElementById('mobile-toggle-btn');
-        const newChatBtn = document.getElementById('new-chat-btn');
+  // ---- Fill these in from your Firebase project settings (Project settings > General > Your apps) ----
+  const firebaseConfig = {
+    apiKey: "AIzaSyCO_BFjf7xGrflwFbqy7BhXlI6JUvIOnaI",
+    authDomain: "nexus-7-18e42.firebaseapp.com",
+    projectId: "nexus-7-18e42",
+    storageBucket: "nexus-7-18e42.firebasestorage.app",
+    messagingSenderId: "1084824931811",
+    appId: "1:1084824931811:web:ddb82345e34d1e565a24d6",
+  };
+  const fbApp = initializeApp(firebaseConfig);
+  const auth = getAuth(fbApp);
+  const db = getFirestore(fbApp);
+  const googleProvider = new GoogleAuthProvider();
 
-        apiKeyInput.value = apiKey;
-        renderSessions();
-        renderCurrentChat();
+  const PERSONA = "You are NEXUS-7, a friendly and knowledgeable AI assistant. Give clear, helpful, well-structured answers, using Markdown formatting where it helps readability. If the user's message contains typos or misspelled words, silently interpret their intended meaning from context and respond normally — never point out, correct, mention, or ask about the misspelling. If the user attaches an image or document, use it to inform your answer.";
+  const WELCOME_TEXT = "👋 Hi, I'm NEXUS-7! Ask me anything, share a document or image, or just say hello. What can I help you with today?";
+  const QUICK_PROMPTS = ['Summarize a document I upload', 'Help me write an email', 'Explain a tricky concept'];
+  const MAX_FILE_BYTES = 4 * 1024 * 1024;
+  const MAX_ATTACHMENTS = 3;
 
-        toggleSidebarBtn.addEventListener('click', () => sidebar.classList.toggle('-ml-72'));
-        mobileToggleBtn.addEventListener('click', () => sidebar.classList.toggle('-ml-72'));
+  function newSessionId() {
+    return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  }
+  function newSession(title) {
+    return { id: newSessionId(), title, messages: [{ role: 'model', text: WELCOME_TEXT, welcome: true }] };
+  }
 
-        settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
-        closeModalBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-        cancelSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-        
-        saveSettingsBtn.addEventListener('click', () => {
-            apiKey = apiKeyInput.value.trim();
-            localStorage.setItem('nexus_gemini_api_key', apiKey);
-            settingsModal.classList.add('hidden');
+  let currentUser = null;
+  let sessions = [];
+  let currentSessionId = null;
+  let pendingAttachments = [];
+  let busy = false;
+  let abortCtl = null;
+
+  // ---- DOM refs ----
+  const authModal = document.getElementById('auth-modal');
+  const closeAuthBtn = document.getElementById('close-auth-btn');
+  const googleBtn = document.getElementById('google-signin-btn');
+  const authForm = document.getElementById('auth-form');
+  const authEmailInput = document.getElementById('auth-email');
+  const authPasswordInput = document.getElementById('auth-password');
+  const authSubmitBtn = document.getElementById('auth-submit-btn');
+  const authErrorEl = document.getElementById('auth-error');
+  const authTogglePrompt = document.getElementById('auth-toggle-prompt');
+  const authToggleBtn = document.getElementById('auth-toggle-btn');
+  const accountSectionEl = document.getElementById('account-section');
+
+  const sessionListEl = document.getElementById('session-list');
+  const currentSessionTitleEl = document.getElementById('current-session-title');
+  const messageStreamEl = document.getElementById('message-stream');
+  const userInputEl = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+  const sendBtnLabel = document.getElementById('send-btn-label');
+  const sidebar = document.getElementById('sidebar');
+  const settingsModal = document.getElementById('settings-modal');
+  const apiKeyInput = document.getElementById('api-key-input');
+  const attachBtn = document.getElementById('attach-btn');
+  const fileInputEl = document.getElementById('file-input');
+  const pendingAttachmentsEl = document.getElementById('pending-attachments');
+  const attachErrorEl = document.getElementById('attach-error');
+
+  // ---- Auth ----
+  let authMode = 'signin';
+  authToggleBtn.addEventListener('click', () => {
+    authMode = authMode === 'signin' ? 'signup' : 'signin';
+    authSubmitBtn.textContent = authMode === 'signin' ? 'Sign in' : 'Create account';
+    authTogglePrompt.textContent = authMode === 'signin' ? "Don't have an account?" : 'Already have an account?';
+    authToggleBtn.textContent = authMode === 'signin' ? 'Create one' : 'Sign in';
+    authErrorEl.textContent = '';
+  });
+
+  function friendlyAuthError(e) {
+    const map = {
+      'auth/invalid-email': "That email address doesn't look right.",
+      'auth/user-not-found': 'No account found with that email.',
+      'auth/wrong-password': 'Incorrect password. Please try again.',
+      'auth/invalid-credential': 'Incorrect email or password.',
+      'auth/email-already-in-use': 'An account already exists with that email — try signing in instead.',
+      'auth/weak-password': 'Please choose a password with at least 6 characters.',
+      'auth/popup-closed-by-user': '',
+      'auth/unauthorized-domain': "This site isn't authorized for sign-in yet — add its domain in Firebase Authentication settings.",
+    };
+    return (e && map[e.code]) || 'Something went wrong. Please try again.';
+  }
+
+  googleBtn.addEventListener('click', async () => {
+    authErrorEl.textContent = '';
+    try { await signInWithPopup(auth, googleProvider); }
+    catch (e) { authErrorEl.textContent = friendlyAuthError(e); }
+  });
+
+  authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    authErrorEl.textContent = '';
+    const email = authEmailInput.value.trim();
+    const pw = authPasswordInput.value;
+    try {
+      if (authMode === 'signup') await createUserWithEmailAndPassword(auth, email, pw);
+      else await signInWithEmailAndPassword(auth, email, pw);
+    } catch (e) { authErrorEl.textContent = friendlyAuthError(e); }
+  });
+
+  closeAuthBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+  authModal.addEventListener('click', (e) => { if (e.target === authModal) authModal.classList.add('hidden'); });
+
+  function openAuthModal() { authErrorEl.textContent = ''; authModal.classList.remove('hidden'); }
+
+  function signOutClicked() { signOut(auth); }
+
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    renderAccountSection();
+    if (user) {
+      authModal.classList.add('hidden');
+      await loadOrMigrateSessions(user.uid);
+    } else {
+      loadGuestSessions();
+      renderSessions();
+      renderCurrentChat();
+    }
+  });
+
+  // ---- Account section (sidebar) ----
+  function renderAccountSection() {
+    if (currentUser) {
+      const label = currentUser.email || currentUser.displayName || 'Signed in';
+      const initial = label.charAt(0).toUpperCase();
+      const photo = currentUser.photoURL;
+      accountSectionEl.innerHTML = `
+        <div class="flex items-center gap-2.5">
+          ${photo ? `<img src="${photo}" referrerpolicy="no-referrer" class="w-7 h-7 rounded-full flex-shrink-0">`
+                   : `<span class="w-7 h-7 rounded-full bg-nexus-accent/30 text-nexus-accent flex items-center justify-center text-xs font-semibold flex-shrink-0">${initial}</span>`}
+          <span class="flex-1 min-w-0">
+            <span class="block text-xs text-white truncate">${escapeHtml(label)}</span>
+            <span class="block text-[10px] text-nexus-muted">Synced across devices</span>
+          </span>
+          <button id="signout-btn" class="text-xs text-nexus-muted hover:text-white flex-shrink-0 px-2 py-1 rounded-lg hover:bg-nexus-border/50">Sign out</button>
+        </div>`;
+      document.getElementById('signout-btn').addEventListener('click', signOutClicked);
+    } else {
+      accountSectionEl.innerHTML = `
+        <button id="signin-open-btn" class="w-full py-2 px-3 bg-nexus-accent/15 hover:bg-nexus-accent/25 border border-nexus-accent/30 rounded-xl text-nexus-accent text-xs font-medium transition-colors">Sign in</button>
+        <p class="text-[10px] text-nexus-muted text-center mt-1.5">Guest mode — chats stay on this device only</p>`;
+      document.getElementById('signin-open-btn').addEventListener('click', openAuthModal);
+    }
+  }
+
+  // ---- Guest (localStorage) session storage ----
+  function loadGuestSessions() {
+    let guest = [];
+    try { guest = JSON.parse(localStorage.getItem('nexus_guest_sessions')) || []; } catch (e) { guest = []; }
+    sessions = guest.length ? guest : [newSession('New chat')];
+    currentSessionId = sessions[0].id;
+  }
+  function persistGuestSessions() {
+    try { localStorage.setItem('nexus_guest_sessions', JSON.stringify(sessions)); } catch (e) {}
+  }
+
+  // ---- Firestore (signed-in) session storage ----
+  async function loadOrMigrateSessions(uid) {
+    try {
+      const q = query(collection(db, 'users', uid, 'sessions'), orderBy('updatedAt', 'desc'));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        // New account: bring over the current guest conversation if it has real content.
+        const hasRealContent = sessions.some(s => s.messages.some(m => m.role === 'user'));
+        if (!hasRealContent) sessions = [newSession('New chat')];
+        sessions.forEach(s => persistSession(s));
+      } else {
+        sessions = snap.docs.map(d => ({ id: d.id, title: d.data().title || 'New chat', messages: d.data().messages || [] }));
+      }
+    } catch (e) {
+      console.error('Could not load chats', e);
+      if (!sessions.length) sessions = [newSession('New chat')];
+    }
+    currentSessionId = sessions[0].id;
+    renderSessions();
+    renderCurrentChat();
+  }
+
+  function persistSession(s) {
+    if (!currentUser) return;
+    setDoc(doc(db, 'users', currentUser.uid, 'sessions', s.id), {
+      title: s.title,
+      messages: s.messages,
+      updatedAt: serverTimestamp(),
+    }).catch(e => console.error('Could not save chat', e));
+  }
+
+  function removeSessionRemote(id) {
+    if (!currentUser) return;
+    deleteDoc(doc(db, 'users', currentUser.uid, 'sessions', id)).catch(e => console.error('Could not delete chat', e));
+  }
+
+  function saveAndRender() {
+    const cur = sessions.find(s => s.id === currentSessionId);
+    if (currentUser) {
+      if (cur) persistSession(cur);
+    } else {
+      persistGuestSessions();
+    }
+    renderSessions();
+    renderCurrentChat();
+  }
+
+  // Show something immediately — don't wait on Firebase's auth check to resolve.
+  loadGuestSessions();
+  renderAccountSection();
+  renderSessions();
+  renderCurrentChat();
+
+  // ---- Sidebar / sessions UI ----
+  document.getElementById('toggle-sidebar-btn').addEventListener('click', () => sidebar.classList.toggle('-ml-72'));
+  document.getElementById('mobile-toggle-btn').addEventListener('click', () => sidebar.classList.toggle('-ml-72'));
+
+  document.getElementById('new-chat-btn').addEventListener('click', () => {
+    const s = newSession('New chat');
+    sessions.unshift(s);
+    currentSessionId = s.id;
+    if (currentUser) persistSession(s); else persistGuestSessions();
+    renderSessions();
+    renderCurrentChat();
+    userInputEl.focus();
+  });
+
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function renderSessions() {
+    sessionListEl.innerHTML = '';
+    sessions.forEach(s => {
+      const isActive = s.id === currentSessionId;
+      const div = document.createElement('div');
+      div.className = `group flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors text-sm ${isActive ? 'bg-nexus-border text-white font-medium' : 'text-nexus-muted hover:bg-nexus-border/50 hover:text-white'}`;
+      div.innerHTML = `
+        <div class="flex items-center space-x-2.5 truncate">
+          <svg class="w-4 h-4 text-nexus-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          <span class="truncate">${escapeHtml(s.title)}</span>
+        </div>
+        <button class="opacity-0 group-hover:opacity-100 text-nexus-muted hover:text-rose-400 p-1 transition-opacity delete-btn" aria-label="Delete chat" data-id="${s.id}">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 2 0 00-2-2h-4a1 2 0 00-2 2v3M4 7h16"/></svg>
+        </button>`;
+      div.addEventListener('click', (e) => {
+        if (e.target.closest('.delete-btn')) { e.stopPropagation(); deleteSession(s.id); return; }
+        currentSessionId = s.id; renderSessions(); renderCurrentChat();
+      });
+      sessionListEl.appendChild(div);
+    });
+  }
+
+  function deleteSession(id) {
+    if (!confirm('Delete this chat? This cannot be undone.')) return;
+    sessions = sessions.filter(s => s.id !== id);
+    if (currentUser) removeSessionRemote(id);
+    if (!sessions.length) {
+      const s = newSession('New chat');
+      sessions.push(s);
+      if (currentUser) persistSession(s);
+    }
+    if (currentSessionId === id) currentSessionId = sessions[0].id;
+    if (!currentUser) persistGuestSessions();
+    renderSessions();
+    renderCurrentChat();
+  }
+
+  // ---- Attachments ----
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  }
+
+  attachBtn.addEventListener('click', () => fileInputEl.click());
+  fileInputEl.addEventListener('change', async (e) => {
+    await handleFiles(e.target.files);
+    e.target.value = '';
+  });
+
+  async function handleFiles(fileList) {
+    attachErrorEl.textContent = '';
+    const room = MAX_ATTACHMENTS - pendingAttachments.length;
+    if (room <= 0) { attachErrorEl.textContent = `You can attach up to ${MAX_ATTACHMENTS} files per message.`; return; }
+    const files = Array.from(fileList).slice(0, room);
+    for (const file of files) {
+      if (file.size > MAX_FILE_BYTES) { attachErrorEl.textContent = `"${file.name}" is too large (max 4\u00a0MB).`; continue; }
+      const isInline = file.type.startsWith('image/') || file.type === 'application/pdf';
+      try {
+        if (isInline) {
+          const dataBase64 = await readFileAsBase64(file);
+          pendingAttachments.push({ name: file.name, mimeType: file.type, kind: 'inline', dataBase64 });
+        } else {
+          const content = await readFileAsText(file);
+          pendingAttachments.push({ name: file.name, mimeType: file.type || 'text/plain', kind: 'text', content: content.slice(0, 20000) });
+        }
+      } catch (e) { attachErrorEl.textContent = `Couldn't read "${file.name}".`; }
+    }
+    renderAttachmentChips();
+    updateSendState();
+  }
+
+  function renderAttachmentChips() {
+    pendingAttachmentsEl.innerHTML = '';
+    pendingAttachments.forEach((a, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = `<span>📎 ${escapeHtml(a.name)}</span>`;
+      const x = document.createElement('button');
+      x.setAttribute('aria-label', 'Remove attachment');
+      x.className = 'text-nexus-muted hover:text-rose-400';
+      x.textContent = '✕';
+      x.addEventListener('click', () => { pendingAttachments.splice(i, 1); renderAttachmentChips(); updateSendState(); });
+      chip.appendChild(x);
+      pendingAttachmentsEl.appendChild(chip);
+    });
+  }
+
+  // ---- Input / send state ----
+  function updateSendState() {
+    sendBtn.disabled = !busy && !userInputEl.value.trim() && pendingAttachments.length === 0;
+  }
+  userInputEl.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; updateSendState(); });
+  userInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
+  sendBtn.addEventListener('click', () => { if (busy) { abortCtl?.abort(); } else { handleSendMessage(); } });
+
+  // ---- Settings modal ----
+  apiKeyInput.value = localStorage.getItem('nexus_gemini_api_key') || '';
+  document.getElementById('settings-btn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
+  document.getElementById('close-modal-btn').addEventListener('click', () => settingsModal.classList.add('hidden'));
+  document.getElementById('cancel-settings-btn').addEventListener('click', () => settingsModal.classList.add('hidden'));
+  document.getElementById('save-settings-btn').addEventListener('click', () => {
+    localStorage.setItem('nexus_gemini_api_key', apiKeyInput.value.trim());
+    settingsModal.classList.add('hidden');
+  });
+
+  // ---- Chat rendering ----
+  function renderCurrentChat() {
+    const cur = sessions.find(s => s.id === currentSessionId);
+    if (!cur) return;
+    currentSessionTitleEl.textContent = cur.title;
+    messageStreamEl.innerHTML = '';
+    cur.messages.forEach(msg => {
+      const wrap = document.createElement('div');
+      wrap.className = `flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full`;
+      const col = document.createElement('div');
+      col.className = `flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} max-w-xl`;
+      const bubble = document.createElement('div');
+      if (msg.role === 'user') {
+        bubble.className = 'bg-nexus-accent/15 border border-nexus-accent/30 rounded-2xl p-4 text-white text-sm leading-relaxed whitespace-pre-wrap';
+        bubble.textContent = msg.text;
+      } else {
+        bubble.className = 'max-w-2xl bg-nexus-panel border border-nexus-border rounded-2xl p-5 text-nexus-text text-sm leading-relaxed shadow-lg';
+        if (msg.text === '__typing__') {
+          bubble.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+        } else {
+          try { bubble.innerHTML = (typeof marked !== 'undefined') ? marked.parse(msg.text || '') : msg.text; }
+          catch (e) { bubble.textContent = msg.text; }
+        }
+      }
+      col.appendChild(bubble);
+      if (msg.attachments && msg.attachments.length) {
+        const row = document.createElement('div');
+        row.className = 'flex flex-wrap gap-1.5 mt-1.5';
+        msg.attachments.forEach(a => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.textContent = `📎 ${a.name}`;
+          row.appendChild(chip);
         });
-
-        newChatBtn.addEventListener('click', () => {
-            const newSession = {
-                id: Date.now().toString(),
-                title: 'New Neural Session',
-                messages: []
-            };
-            sessions.unshift(newSession);
-            currentSessionId = newSession.id;
-            saveAndRender();
+        col.appendChild(row);
+      }
+      wrap.appendChild(col);
+      messageStreamEl.appendChild(wrap);
+      if (msg.welcome && cur.messages.length === 1) {
+        const chips = document.createElement('div');
+        chips.className = 'flex flex-wrap gap-2';
+        QUICK_PROMPTS.forEach(p => {
+          const b = document.createElement('button');
+          b.className = 'quick-prompt px-3.5 py-1.5 bg-nexus-panel hover:bg-nexus-border border border-nexus-border rounded-lg text-xs text-nexus-text transition-colors';
+          b.textContent = p;
+          b.addEventListener('click', () => { userInputEl.value = p; handleSendMessage(); });
+          chips.appendChild(b);
         });
+        messageStreamEl.appendChild(chips);
+      }
+    });
+    const cc = document.getElementById('chat-container');
+    cc.scrollTop = cc.scrollHeight;
+  }
 
-        userInputEl.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
+  // ---- Sending ----
+  async function handleSendMessage() {
+    if (busy) return;
+    const text = userInputEl.value.trim();
+    if (!text && pendingAttachments.length === 0) return;
+    const cur = sessions.find(s => s.id === currentSessionId);
+    if (!cur.messages.some(m => m.role === 'user')) {
+      const base = text || (pendingAttachments[0] && pendingAttachments[0].name) || 'New chat';
+      cur.title = base.length > 25 ? base.slice(0, 25) + '...' : base;
+    }
 
-        userInputEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
+    const attachmentsForRequest = pendingAttachments.map(a => a.kind === 'inline'
+      ? { inlineData: { mimeType: a.mimeType, data: a.dataBase64 } }
+      : { text: `--- Attached file: ${a.name} ---\n${a.content}\n--- end of ${a.name} ---` });
+    const attachmentMeta = pendingAttachments.map(a => ({ name: a.name, mimeType: a.mimeType }));
+    const currentUserParts = [...(text ? [{ text }] : []), ...attachmentsForRequest];
+
+    cur.messages.push({ role: 'user', text, attachments: attachmentMeta });
+    userInputEl.value = '';
+    userInputEl.style.height = 'auto';
+    pendingAttachments = [];
+    renderAttachmentChips();
+    attachErrorEl.textContent = '';
+    updateSendState();
+    saveAndRender();
+
+    const apiKey = localStorage.getItem('nexus_gemini_api_key') || '';
+
+    cur.messages.push({ role: 'model', text: '__typing__' });
+    const replyIdx = cur.messages.length - 1;
+    renderCurrentChat();
+
+    busy = true;
+    sendBtnLabel.textContent = 'Stop';
+    abortCtl = new AbortController();
+
+    const history = cur.messages.slice(0, -1)
+      .filter(m => !m.welcome)
+      .map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text || '' }] }));
+    history[history.length - 1] = { role: 'user', parts: currentUserParts };
+
+    try {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: abortCtl.signal,
+        body: JSON.stringify({ apiKey, system: PERSONA, contents: history }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        let errText = 'Something went wrong. Please try again.';
+        try { const j = await resp.json(); errText = (j.error && j.error.message) || errText; } catch (e) {}
+        if (/missing apikey/i.test(errText)) { errText = 'Add a Gemini API key in Settings to start chatting.'; settingsModal.classList.remove('hidden'); }
+        cur.messages[replyIdx].text = errText;
+        saveAndRender();
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      let full = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const jsonStr = line.slice(5).trim();
+          if (!jsonStr) continue;
+          let chunk;
+          try { chunk = JSON.parse(jsonStr); } catch (e) { continue; }
+          const parts = chunk?.candidates?.[0]?.content?.parts || [];
+          for (const p of parts) {
+            if (typeof p.text === 'string') {
+              full += p.text;
+              cur.messages[replyIdx].text = full;
+              renderCurrentChat();
             }
-        });
-
-        sendBtn.addEventListener('click', handleSendMessage);
-
-        document.querySelectorAll('.quick-prompt').forEach(btn => {
-            btn.addEventListener('click', () => {
-                userInputEl.value = btn.textContent;
-                handleSendMessage();
-            });
-        });
-
-        function saveAndRender() {
-            localStorage.setItem('nexus_sessions', JSON.stringify(sessions));
-            renderSessions();
-            renderCurrentChat();
+          }
         }
-
-        function renderSessions() {
-            sessionListEl.innerHTML = '';
-            sessions.forEach(s => {
-                const isActive = s.id === currentSessionId;
-                const div = document.createElement('div');
-                div.className = `group flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors text-sm ${isActive ? 'bg-cyber-border text-white font-medium' : 'text-cyber-muted hover:bg-cyber-border/50 hover:text-white'}`;
-                div.innerHTML = `
-                    <div class="flex items-center space-x-2.5 truncate">
-                        <svg class="w-4 h-4 text-cyber-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                        <span class="truncate">${s.title}</span>
-                    </div>
-                    <button class="opacity-0 group-hover:opacity-100 text-cyber-muted hover:text-red-400 p-1 transition-opacity delete-btn" data-id="${s.id}">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 2 0 00-2-2h-4a1 2 0 00-2 2v3M4 7h16"/></svg>
-                    </button>
-                `;
-                div.addEventListener('click', (e) => {
-                    if (e.target.closest('.delete-btn')) {
-                        e.stopPropagation();
-                        deleteSession(s.id);
-                        return;
-                    }
-                    currentSessionId = s.id;
-                    renderSessions();
-                    renderCurrentChat();
-                });
-                sessionListEl.appendChild(div);
-            });
-        }
-
-        function deleteSession(id) {
-            sessions = sessions.filter(s => s.id !== id);
-            if (sessions.length === 0) {
-                sessions.push({ id: Date.now().toString(), title: 'Autonomous Core Session', messages: [] });
-            }
-            if (currentSessionId === id) {
-                currentSessionId = sessions[0].id;
-            }
-            saveAndRender();
-        }
-
-        function renderCurrentChat() {
-            const currentSession = sessions.find(s => s.id === currentSessionId);
-            if (!currentSession) return;
-
-            currentSessionTitleEl.textContent = currentSession.title;
-            messageStreamEl.innerHTML = '';
-
-            if (currentSession.messages.length === 0) {
-                welcomeBannerEl.classList.remove('hidden');
-                messageStreamEl.classList.add('hidden');
-                return;
-            }
-
-            welcomeBannerEl.classList.add('hidden');
-            messageStreamEl.classList.remove('hidden');
-
-            currentSession.messages.forEach(msg => {
-                const messageWrapper = document.createElement('div');
-                messageWrapper.className = `flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full`;
-
-                const bubble = document.createElement('div');
-                if (msg.role === 'user') {
-                    bubble.className = 'max-w-xl bg-cyber-accent/10 border border-cyber-accent/30 rounded-2xl p-4 text-white text-sm leading-relaxed';
-                    bubble.textContent = msg.text;
-                } else {
-                    bubble.className = 'max-w-2xl bg-cyber-panel border border-cyber-border rounded-2xl p-5 text-cyber-text text-sm leading-relaxed shadow-lg';
-                    try {
-                        if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
-                            bubble.innerHTML = marked.parse(msg.text);
-                        } else {
-                            bubble.textContent = msg.text;
-                        }
-                    } catch (e) {
-                        bubble.textContent = msg.text;
-                    }
-                }
-                messageWrapper.appendChild(bubble);
-                messageStreamEl.appendChild(messageWrapper);
-            });
-
-            const chatContainer = document.getElementById('chat-container');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        async function handleSendMessage() {
-            const text = userInputEl.value.trim();
-            if (!text) return;
-
-            const currentSession = sessions.find(s => s.id === currentSessionId);
-            if (currentSession.messages.length === 0) {
-                currentSession.title = text.length > 25 ? text.substring(0, 25) + '...' : text;
-            }
-
-            currentSession.messages.push({ role: 'user', text });
-            userInputEl.value = '';
-            userInputEl.style.height = 'auto';
-            saveAndRender();
-
-            const loadingId = 'loading-' + Date.now();
-            currentSession.messages.push({ role: 'model', text: 'Processing telemetry...', id: loadingId });
-            renderCurrentChat();
-
-            try {
-                const responseText = await callGeminiAPI(currentSession.messages.filter(m => m.id !== loadingId));
-                const msgIndex = currentSession.messages.findIndex(m => m.id === loadingId);
-                if (msgIndex !== -1) {
-                    currentSession.messages[msgIndex] = { role: 'model', text: responseText };
-                }
-            } catch (err) {
-                const msgIndex = currentSession.messages.findIndex(m => m.id === loadingId);
-                if (msgIndex !== -1) {
-                    currentSession.messages[msgIndex] = { role: 'model', text: 'Transmission error: ' + err.message };
-                }
-            }
-            saveAndRender();
-        }
-
-        async function callGeminiAPI(history) {
-            const activeKey = apiKey || localStorage.getItem('nexus_gemini_api_key') || '';
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeKey}`;
-            
-            const contents = history.map(m => ({
-                role: m.role === 'user' ? 'user' : 'model',
-                parts: [{ text: m.text }]
-            }));
-
-            const payload = {
-                contents: contents,
-                systemInstruction: {
-                    parts: [{ text: "You are NEXUS-7, an elite futuristic AI core with advanced technical and creative capabilities. Provide precise, clean, and beautifully structured responses." }]
-                }
-            };
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-            const candidate = result.candidates?.[0];
-            if (candidate && candidate.content?.parts?.[0]?.text) {
-                return candidate.content.parts[0].text;
-            } else {
-                throw new Error(result.error?.message || 'Invalid API response structure. Please verify your API key in settings.');
-            }
-        }
-    </script>
+      }
+      cur.messages[replyIdx].text = full || '_(empty response)_';
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        if (!cur.messages[replyIdx].text || cur.messages[replyIdx].text === '__typing__') cur.messages.splice(replyIdx, 1);
+      } else {
+        cur.messages[replyIdx].text = e.message || 'Something went wrong. Please try again.';
+      }
+    } finally {
+      busy = false;
+      sendBtnLabel.textContent = 'Send';
+      updateSendState();
+      saveAndRender();
+    }
+  }
+</script>
 </body>
 </html>
